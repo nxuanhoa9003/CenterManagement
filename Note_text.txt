@@ -1,0 +1,100 @@
+﻿CenterManagement/
+│── CenterManagement.sln
+│── CenterManagement.API/           → Dự án API chính (Web API)
+│── CenterManagement.Application/   → Chứa logic nghiệp vụ (Service, Use Case)
+│── CenterManagement.Domain/        → Chứa Entity, Interface, Enum
+│── CenterManagement.Infrastructure/→ Chứa Database Context, Repository, Migration
+│── CenterManagement.Shared/        → Chứa các phần dùng chung (DTO, Helpers, Exceptions)
+
+Teacher (Giáo viên)
+Student (Học viên)
+Course (Khóa học)
+Class (Lớp học)
+Lesson (Buổi học)
+Attendance (Điểm danh)
+Enrollment (Ghi danh học viên vào lớp)
+Payment (Thanh toán học phí)
+Category (Danh mục khóa học)
+
+
+Teacher - Class : 1 - N (Một giáo viên có nhiều lớp học)
+Category - Course : 1 - N (Một danh mục có nhiều khóa học)
+Course - Class : 1 - N (Một khóa học có nhiều lớp học)
+Class - Lesson : 1 - N (Một lớp học có nhiều buổi học)
+Lesson - Attendance: 1 - N (Một buổi học có nhiều bản ghi điểm danh)
+Student - Attendance: 1 - N (Một học viên có nhiều bản ghi điểm danh)
+Student - Enrollment - Class: N - N (Một học viên có thể học nhiều lớp, một lớp có nhiều học viên)
+Student - Payment - Course: N - N (Một học viên có thể thanh toán nhiều khóa học, một khóa có nhiều học viên)
+
+
+
+
+migration:
+add-migration InitialCreate
+# Chạy lệnh trong thư mục gốc của solution (CenterManagement)
+dotnet ef migrations add InitialCreate --startup-project API --project Infrastructures --output-dir Migrations
+
+
+update-database
+dotnet ef database update --startup-project API --project Infrastructures
+
+xoá migration
+dotnet ef migrations remove --startup-project API --project Infrastructures
+
+Rollback Migration
+Nếu đã chạy update-database, trước tiên cần rollback database về Migration trước đó:
+dotnet ef database update PreviousMigrationName --startup-project API --project Infrastructures
+Thay PreviousMigrationName bằng Migration trước đó.
+
+
+Nếu chỉ có 1 Migration, rollback về trạng thái ban đầu bằng:
+dotnet ef database update 0 --startup-project API --project Infrastructures
+
+
+
+DBCC CHECKIDENT ('RefreshTokens', RESEED, 0);
+
+Access Token dùng để gọi API, có thời gian sống ngắn.
+Refresh Token giúp cấp lại Access Token mà không cần đăng nhập lại.
+Nếu Refresh Token bị thu hồi hoặc hết hạn, người dùng phải đăng nhập lại.
+
+dotnet clean
+dotnet build
+dotnet watch run --project API
+
+
+api -> application
+
+application -> Domain, Infrastructure
+
+domain -> trống
+
+Infrastructure -> domain 
+
+share -> trống
+
+
+
+
+TransactionService thủ công
+await _transactionService.BeginTransactionAsync();
+try
+{
+    await _userRepository.CreateUserAsync(user);
+    await _profileRepository.CreateProfileAsync(userProfile);
+
+    await _transactionService.CommitAsync();
+}
+catch
+{
+    await _transactionService.RollbackAsync();
+    throw;
+}
+
+dotnet ef migrations add UpdateTableClaims --startup-project API --project Infrastructures --output-dir Migrations
+
+dotnet ef database update --startup-project API --project Infrastructures
+
+
+
+
